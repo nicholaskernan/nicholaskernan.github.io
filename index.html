@@ -37,6 +37,10 @@
         <select name="month" id="month">
             <option>August_2022</option>
             <option>September_2022</option>
+            <option>October_2022</option>
+            <option>November_2022</option>
+            <option>December_2022</option>
+            <option>January_2023</option>
         </select>
 
         &nbsp; &nbsp; &nbsp; &nbsp; 
@@ -88,10 +92,109 @@
     <hr>
     <br>
     <div id="images"></div>
-    <div id="map-container" style="visibility: hidden; text-align: center;">
+    <div id="map-container" style="visibility: visible; text-align: center;">
         <br> <br> <br> <br> <br> 
         <h1> Probe Map </h1> <p id="message"> </p><hr>
         <div id='map'></div>
     </div>  
 </body>
+<script>
+    function getChoices() {
+        clear()
+
+        console.log('get choices called')
+        const month = document.querySelector("#month").value
+        const cdn = document.querySelector("#cdn").value
+        const ip = document.querySelector("#ip").value
+        const reg = document.querySelector("#region").value
+
+
+        const choices = {"month": month, "cdn": cdn, "ip": ip, "reg": reg}
+        console.log(choices)
+        
+        if (cdn=="All") {
+            const cdns = ["Akamai", "Cloudflare", "Edgecast", "Fastly"]
+            
+            for (var i=0; i<4; i++) { 
+                const element = cdns[i]
+                console.log(element)
+                const copy = Object.assign({}, choices)
+                copy["cdn"] = element
+                addFourGraphs(copy)
+                //setTimeout(() => {addFourGraphs(copy)}, i*400);
+            }
+        } else {
+            addFourGraphs(choices)
+        }        
+    }
+
+    function addFourGraphs(choices) {
+        console.log('add four graphs called')
+        const avg = ["Median", "Mean"]
+        const msm = ["DNS", "SSL"]
+        
+        for (var i=0; i<2; i++) {
+            for(var x=0; x<2; x++) {
+                const copy = Object.assign({}, choices)
+                copy["avg"] = avg[i]
+                copy["msm"] = msm[x]
+                getGraphs(copy)
+                //setTimeout(() => {getGraphs(copy)}, (i+x)*100);
+            }
+        }
+    }
+
+    function getGraphs(choices) {
+        //console.log('get graphs called')
+        const lowers = ["cdn", "msm", "avg"]
+        lowers.forEach((key) => choices[key] = choices[key].toLowerCase())
+
+        const region = choices["reg"]
+        const ip = choices["ip"]
+
+        const choice_string = `${choices['cdn']}_${choices['msm']}_${choices['avg']}`
+
+        //console.log(`choice string: ${choice_string}`)
+
+        const path = `${choices['month']}/${region}/${ip}/${choice_string}.png`
+        console.log(path)
+        const myImage = new Image()
+        myImage.src = path
+        document.querySelector("#images").appendChild(myImage); 
+    }
+
+    function clear() {
+        const images = document.querySelectorAll("img")
+        images.forEach((img) => img.remove())
+        document.querySelector("#map-container").style.visibility = "hidden"
+    }
+
+    function initMap() {
+        var options = {
+            zoom:2,
+            center:{lat:0, lng:0}
+        }
+        var map = new google.maps.Map(document.getElementById('map'), options);
+
+        let marker = {
+            //path: "M10.453 14.016l6.563-6.609-1.406-1.406-5.156 5.203-2.063-2.109-1.406 1.406zM12 2.016q2.906 0 4.945 2.039t2.039 4.945q0 1.453-0.727 3.328t-1.758 3.516-2.039 3.070-1.711 2.273l-0.75 0.797q-0.281-0.328-0.75-0.867t-1.688-2.156-2.133-3.141-1.664-3.445-0.75-3.375q0-2.906 2.039-4.945t4.945-2.039z",
+            path: google.maps.SymbolPath.CIRCLE,
+            fillOpacity: 1,
+            strokeWeight: 1,
+            rotation: 0,
+            scale: 6,
+        };
+
+        function addMarker(lat, lng, color) {
+            console.log(lat)
+            console.log(lng)
+            console.log(color)
+            marker.fillColor = color;
+            new google.maps.Marker({position:{lat:lat, lng:lng}, map:map, icon: marker})
+        }
+    }
+</script>
+<script async defer 
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJn5xWg452lwoAwYoodhZ3cxjRS6P8emw&callback=initMap">
+  </script>
 </html>
